@@ -62,8 +62,8 @@ def main():
         from training.dqn_training import run_dqn_sweeps
         run_dqn_sweeps()
     elif args.mode == "train_pg":
-        from training.pg_training import run_pg_sweeps
-        run_pg_sweeps()
+        from training.pg_training import run_policy_gradient_sweeps
+        run_policy_gradient_sweeps()
     elif args.mode == "plot":
         from training.evaluate_and_plot import generate_report_plots
         generate_report_plots()

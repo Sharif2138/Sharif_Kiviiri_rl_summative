@@ -36,7 +36,7 @@ class PolicyNetwork(nn.Module):
         return action.item(), dist.log_prob(action)
 
 
-def train_reinforce_single_run(lr, gamma, hidden_dim, max_episodes=500):
+def train_reinforce_single_run(lr, gamma, hidden_dim, run_idx, max_episodes=500):
     env = gym.make("DriverFatigue-v0")
     policy = PolicyNetwork(state_dim=4, action_dim=4, hidden_dim=hidden_dim)
     optimizer = optim.Adam(policy.parameters(), lr=lr)
@@ -77,6 +77,9 @@ def train_reinforce_single_run(lr, gamma, hidden_dim, max_episodes=500):
         policy_loss = torch.stack(policy_loss).sum()
         policy_loss.backward()
         optimizer.step()
+    
+    torch.save(policy.state_dict(),
+               f"models/reinforce/reinforce_run_{run_idx}.pth")
 
     eval_rewards = []
     for _ in range(10):
@@ -99,7 +102,11 @@ def train_reinforce_single_run(lr, gamma, hidden_dim, max_episodes=500):
 
 # Experiment runner for  REINFORCE, PPO, AND A2C
 def run_policy_gradient_sweeps():
+    os.makedirs("models/reinforce", exist_ok=True)
+    os.makedirs("models/ppo", exist_ok=True)
+    os.makedirs("models/a2c", exist_ok=True)
     os.makedirs("logs", exist_ok=True)
+    
     csv_file_path = "logs/pg_report_table.csv"
 
     print("STARTING POLICY GRADIENT & ACTOR-CRITICAL HYPERPARAMETER SWEEPS")
@@ -122,7 +129,7 @@ def run_policy_gradient_sweeps():
 
     for idx, cfg in enumerate(reinforce_configs, 1):
         mean_rew = train_reinforce_single_run(
-            cfg["lr"], cfg["gamma"], cfg["hidden"])
+            cfg["lr"], cfg["gamma"], cfg["hidden"], run_idx=idx)
         results.append({
             "Algorithm": "REINFORCE",
             "Run": idx,
@@ -154,6 +161,8 @@ def run_policy_gradient_sweeps():
         model = PPO("MlpPolicy", env, learning_rate=cfg["lr"], gamma=cfg["gamma"],
                     n_steps=cfg["n_steps"], batch_size=cfg["batch_size"], verbose=0)
         model.learn(total_timesteps=25000)
+        
+        model.save(f"models/ppo/ppo_run_{idx}")
         mean_rew, _ = evaluate_policy(model, env, n_eval_episodes=10)
         env.close()
 
@@ -188,6 +197,8 @@ def run_policy_gradient_sweeps():
         model = A2C("MlpPolicy", env, learning_rate=cfg["lr"], gamma=cfg["gamma"],
                     n_steps=cfg["n_steps"], verbose=0)
         model.learn(total_timesteps=25000)
+        
+        model.save(f"models/a2c/a2c_run_{idx}")
         mean_rew, _ = evaluate_policy(model, env, n_eval_episodes=10)
         env.close()
 
