@@ -265,7 +265,7 @@ def generate_report_plots():
         ("A2C", "#ff7f0e")
     ]:
         entropy_data = load_tensorboard_scalar(
-            f"logs/{algo.lower()}_tensorboard/{algo}_Run_{best_runs[algo]}_1",
+            f"logs/pg_tensorboard/{algo}_Run_{best_runs[algo]}_1",
             "train/entropy_loss"
         )
         if entropy_data is not None:

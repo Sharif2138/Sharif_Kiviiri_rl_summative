@@ -2,6 +2,7 @@ import argparse
 import time
 import sys
 import gymnasium as gym
+from stable_baselines3 import DQN
 import environment
 
 
@@ -9,6 +10,10 @@ def run_simulation():
     print("  AI Fleet Road Safety Monitor - Simulation Mode")
 
     env = gym.make("DriverFatigue-v0", render_mode="human")
+
+    model = DQN.load("models/dqn/dqn_run_1", device="cpu")
+    print("Loaded trained agent: models/dqn/dqn_run_1.zip\n")
+
     obs, _ = env.reset()
 
     done = False
@@ -18,16 +23,8 @@ def run_simulation():
     print("Starting Driver Shift Simulation...\n")
 
     while not done:
-        perclos = obs[0]
-
-        if perclos < 0.35:
-            action = 0
-        elif perclos < 0.65:
-            action = 1
-        elif perclos < 0.85:
-            action = 2
-        else:
-            action = 3
+        action, _states = model.predict(obs, deterministic=True)
+        action = int(action)
 
         obs, reward, terminated, truncated, info = env.step(action)
         env.render()
