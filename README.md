@@ -45,7 +45,6 @@ project_root/
 ├── models/                    # Saved trained models (DQN, REINFORCE, PPO, A2C)
 ├── logs/                      # Monitor CSVs, TensorBoard logs, report tables
 ├── assets/                    # Generated plots for the report
-└── tests/
 ```
 ## Setup
 
