@@ -19,6 +19,7 @@ Four algorithms were trained and compared on the same custom environment:
 
 ## Project Structure
 
+```text
 project_root/
 ├── pyproject.toml
 ├── uv.lock
@@ -26,24 +27,24 @@ project_root/
 ├── main.py
 │
 ├── environment/
-│ ├── init.py
-│ ├── custom_env.py # DriverFatigueEnv (Gymnasium env)
-│ └── rendering.py # 3D OpenGL/PyGame renderer
+│   ├── __init__.py
+│   ├── custom_env.py          # DriverFatigueEnv (Gymnasium env)
+│   └── rendering.py           # 3D OpenGL/PyGame renderer
 │
 ├── training/
-│ ├── init.py
-│ ├── dqn_training.py # DQN hyperparameter sweeps (10 runs)
-│ ├── pg_training.py # REINFORCE / PPO / A2C sweeps (10 runs each)
-│ └── evaluate_and_plot.py # Generates all report plots
+│   ├── __init__.py
+│   ├── dqn_training.py        # DQN hyperparameter sweeps (10 runs)
+│   ├── pg_training.py         # REINFORCE / PPO / A2C sweeps (10 runs each)
+│   └── evaluate_and_plot.py   # Generates all report plots
 │
 ├── api/
-│ └── api_server.py # FastAPI endpoint serving the best DQN model
+│   └── api_server.py          # FastAPI endpoint serving the best DQN model
 │
-├── models/ # Saved trained models (dqn, reinforce, ppo, a2c)
-├── logs/ # Monitor CSVs, TensorBoard logs, report tables
-├── assets/ # Generated plots for the report
+├── models/                    # Saved trained models (DQN, REINFORCE, PPO, A2C)
+├── logs/                      # Monitor CSVs, TensorBoard logs, report tables
+├── assets/                    # Generated plots for the report
 └── tests/
-
+```
 ## Setup
 
 This project uses **[uv](https://docs.astral.sh/uv/)** for dependency and environment
