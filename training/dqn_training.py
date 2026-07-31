@@ -76,7 +76,7 @@ def run_dqn_sweeps():
             tensorboard_log="./logs/dqn_tensorboard/"
         )
 
-        model.learn(total_timesteps=50000)
+        model.learn(total_timesteps=50000, tb_log_name=f"DQN_Run_{i}")
         train_env.close()
 
         # Evaluate over 10 test episodes

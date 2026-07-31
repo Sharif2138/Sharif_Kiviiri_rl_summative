@@ -184,8 +184,8 @@ def run_policy_gradient_sweeps():
         env.action_space.seed(SEED)
         env = Monitor(env, f"logs/ppo_monitors/ppo_run_{idx}")
         model = PPO("MlpPolicy", env, learning_rate=cfg["lr"], gamma=cfg["gamma"],
-                    n_steps=cfg["n_steps"], batch_size=cfg["batch_size"], seed=SEED, verbose=0)
-        model.learn(total_timesteps=50000)
+                    n_steps=cfg["n_steps"], batch_size=cfg["batch_size"], seed=SEED, verbose=0, tensorboard_log="./logs/pg_tensorboard/")
+        model.learn(total_timesteps=50000, tb_log_name=f"PPO_Run_{idx}")
         
         model.save(f"models/ppo/ppo_run_{idx}")
         mean_rew, _ = evaluate_policy(model, env, n_eval_episodes=10)
@@ -223,8 +223,8 @@ def run_policy_gradient_sweeps():
         env.action_space.seed(SEED)
         env = Monitor(env, f"logs/a2c_monitors/a2c_run_{idx}")
         model = A2C("MlpPolicy", env, learning_rate=cfg["lr"], gamma=cfg["gamma"],
-                    n_steps=cfg["n_steps"], seed=SEED, verbose=0)
-        model.learn(total_timesteps=50000)
+                    n_steps=cfg["n_steps"], seed=SEED, verbose=0, tensorboard_log="./logs/pg_tensorboard/")
+        model.learn(total_timesteps=50000, tb_log_name=f"A2C_Run_{idx}")
         
         model.save(f"models/a2c/a2c_run_{idx}")
         mean_rew, _ = evaluate_policy(model, env, n_eval_episodes=10)

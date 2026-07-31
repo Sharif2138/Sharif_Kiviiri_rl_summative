@@ -70,7 +70,7 @@ def main():
     elif args.mode == "api":
         import uvicorn
         print("\nStarting Fleet Monitoring FastAPI Server on http://localhost:8000 ...\n")
-        uvicorn.run("api_server:app", host="0.0.0.0", port=8000, reload=True)
+        uvicorn.run("api.api_server:app", host="0.0.0.0", port=8000, reload=False)
 
 
 if __name__ == "__main__":
