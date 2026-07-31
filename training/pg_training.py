@@ -9,7 +9,10 @@ import gymnasium as gym
 
 from stable_baselines3 import PPO, A2C
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.monitor import Monitor
 import environment
+
+SEED = 42
 
 
 # custom REINFORCE implementation
@@ -36,10 +39,15 @@ class PolicyNetwork(nn.Module):
         return action.item(), dist.log_prob(action)
 
 
-def train_reinforce_single_run(lr, gamma, hidden_dim, run_idx, max_episodes=500):
+def train_reinforce_single_run(lr, gamma, hidden_dim, run_idx, max_episodes=1000):
     env = gym.make("DriverFatigue-v0")
+    env.reset(seed=SEED)
+    env.action_space.seed(SEED)
+    
     policy = PolicyNetwork(state_dim=4, action_dim=4, hidden_dim=hidden_dim)
     optimizer = optim.Adam(policy.parameters(), lr=lr)
+    
+    training_episode_rewards = []
 
     for episode in range(max_episodes):
         state, _ = env.reset()
@@ -77,6 +85,15 @@ def train_reinforce_single_run(lr, gamma, hidden_dim, run_idx, max_episodes=500)
         policy_loss = torch.stack(policy_loss).sum()
         policy_loss.backward()
         optimizer.step()
+        
+        training_episode_rewards.append(sum(rewards))
+        
+    os.makedirs("logs/reinforce_monitors", exist_ok=True)
+    with open(f"logs/reinforce_monitors/reinforce_run_{run_idx}.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["episode", "reward"])
+        for ep, r in enumerate(training_episode_rewards, 1):
+            writer.writerow([ep, r])
     
     torch.save(policy.state_dict(),
                f"models/reinforce/reinforce_run_{run_idx}.pth")
@@ -106,6 +123,11 @@ def run_policy_gradient_sweeps():
     os.makedirs("models/ppo", exist_ok=True)
     os.makedirs("models/a2c", exist_ok=True)
     os.makedirs("logs", exist_ok=True)
+    os.makedirs("logs/ppo_monitors", exist_ok=True)
+    os.makedirs("logs/a2c_monitors", exist_ok=True)
+    
+    np.random.seed(SEED)
+    torch.manual_seed(SEED)
     
     csv_file_path = "logs/pg_report_table.csv"
 
@@ -158,9 +180,12 @@ def run_policy_gradient_sweeps():
 
     for idx, cfg in enumerate(ppo_configs, 1):
         env = gym.make("DriverFatigue-v0")
+        env.reset(seed=SEED)
+        env.action_space.seed(SEED)
+        env = Monitor(env, f"logs/ppo_monitors/ppo_run_{idx}")
         model = PPO("MlpPolicy", env, learning_rate=cfg["lr"], gamma=cfg["gamma"],
-                    n_steps=cfg["n_steps"], batch_size=cfg["batch_size"], verbose=0)
-        model.learn(total_timesteps=25000)
+                    n_steps=cfg["n_steps"], batch_size=cfg["batch_size"], seed=SEED, verbose=0)
+        model.learn(total_timesteps=50000)
         
         model.save(f"models/ppo/ppo_run_{idx}")
         mean_rew, _ = evaluate_policy(model, env, n_eval_episodes=10)
@@ -194,9 +219,12 @@ def run_policy_gradient_sweeps():
 
     for idx, cfg in enumerate(a2c_configs, 1):
         env = gym.make("DriverFatigue-v0")
+        env.reset(seed=SEED)
+        env.action_space.seed(SEED)
+        env = Monitor(env, f"logs/a2c_monitors/a2c_run_{idx}")
         model = A2C("MlpPolicy", env, learning_rate=cfg["lr"], gamma=cfg["gamma"],
-                    n_steps=cfg["n_steps"], verbose=0)
-        model.learn(total_timesteps=25000)
+                    n_steps=cfg["n_steps"], seed=SEED, verbose=0)
+        model.learn(total_timesteps=50000)
         
         model.save(f"models/a2c/a2c_run_{idx}")
         mean_rew, _ = evaluate_policy(model, env, n_eval_episodes=10)

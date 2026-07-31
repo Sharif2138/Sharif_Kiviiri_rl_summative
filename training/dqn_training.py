@@ -3,11 +3,17 @@ import pandas as pd
 import numpy as np
 import gymnasium as gym
 from stable_baselines3 import DQN
+from stable_baselines3.common.monitor import Monitor
 import environment
+
+SEED = 42
 
 
 def evaluate_dqn_policy(model, num_episodes=10):
     eval_env = gym.make("DriverFatigue-v0")
+    eval_env.reset(seed=SEED)
+    eval_env.action_space.seed(SEED)
+    
     total_rewards = []
 
     for _ in range(num_episodes):
@@ -28,6 +34,9 @@ def evaluate_dqn_policy(model, num_episodes=10):
 def run_dqn_sweeps():
     os.makedirs("models/dqn", exist_ok=True)
     os.makedirs("logs", exist_ok=True)
+    os.makedirs("logs/dqn_monitors", exist_ok=True)
+    
+    np.random.seed(SEED)
 
     configs = [
         {"lr": 1e-3, "gamma": 0.99, "buffer_size": 10000, "batch_size": 32, "explore": 0.1},
@@ -49,6 +58,10 @@ def run_dqn_sweeps():
     for i, config in enumerate(configs, 1):
         # Create a fresh environment for each training run
         train_env = gym.make("DriverFatigue-v0")
+        train_env.reset(seed=SEED)
+        train_env.action_space.seed(SEED)
+        
+        train_env = Monitor(train_env, f"logs/dqn_monitors/dqn_run_{i}")
 
         model = DQN(
             "MlpPolicy",
@@ -58,11 +71,12 @@ def run_dqn_sweeps():
             buffer_size=config["buffer_size"],
             batch_size=config["batch_size"],
             exploration_fraction=config["explore"],
+            seed=SEED,
             verbose=0,
             tensorboard_log="./logs/dqn_tensorboard/"
         )
 
-        model.learn(total_timesteps=25000)
+        model.learn(total_timesteps=50000)
         train_env.close()
 
         # Evaluate over 10 test episodes

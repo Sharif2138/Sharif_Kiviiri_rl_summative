@@ -32,9 +32,9 @@ class DriverFatigueEnv(gym.Env):
         self.last_reward = 0.0
 
         self.state = np.array([
-            np.random.uniform(0.0, 0.1),    
-            np.random.uniform(0.0, 0.5),    
-            np.random.uniform(-5.0, 5.0),   
+            self.np_random.uniform(0.0, 0.1),    
+            self.np_random.uniform(0.0, 0.5),    
+            self.np_random.uniform(-5.0, 5.0),   
             0.0                             
         ], dtype=np.float32)
 
@@ -49,11 +49,11 @@ class DriverFatigueEnv(gym.Env):
 
         time_factor = (drive_time / 1440.0) * 0.04
         perclos = np.clip(perclos + time_factor +
-                          np.random.uniform(-0.02, 0.05), 0.0, 1.0)
+                          self.np_random.uniform(-0.02, 0.05), 0.0, 1.0)
         yawn = np.clip(yawn + (time_factor * 8.0) +
-                       np.random.uniform(-0.3, 1.0), 0.0, 10.0)
+                       self.np_random.uniform(-0.3, 1.0), 0.0, 10.0)
         head_pose = np.clip(
-            head_pose + np.random.uniform(-10.0, 10.0) - (perclos * 15.0), -90.0, 90.0)
+            head_pose + self.np_random.uniform(-10.0, 10.0) - (perclos * 15.0), -90.0, 90.0)
 
         reward = 0.0
 
