@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gymnasium as gym
 import torch
-
+from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 import environment
 
 
@@ -57,6 +57,30 @@ def rolling_window_avg(data, window=15):
     if data is None or len(data) == 0:
         return np.array([])
     return pd.Series(data).rolling(window=window, min_periods=1).mean().values
+
+
+def load_tensorboard_scalar(log_dir, scalar_name):
+    if not os.path.exists(log_dir):
+        return None
+    event_files = glob.glob(
+        os.path.join(log_dir, "**", "events.out.tfevents.*"),
+        recursive=True
+    )
+    if len(event_files) == 0:
+        return None
+    latest_event = max(event_files, key=os.path.getmtime)
+    try:
+        ea = EventAccumulator(latest_event)
+        ea.Reload()
+        if scalar_name not in ea.Tags()["scalars"]:
+            return None
+        events = ea.Scalars(scalar_name)
+        steps = [e.step for e in events]
+        values = [e.value for e in events]
+
+        return np.array(steps), np.array(values)
+    except Exception:
+        return None
 
 
 # Main plot generation function
@@ -198,9 +222,86 @@ def generate_report_plots():
     plot3_path = "assets/generalization_test.png"
     plt.savefig(plot3_path, dpi=300)
     plt.close()
-    print(f" Saved: {plot3_path}\n")
+    
+    # DQN Objective Curve (TD Loss)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    loss_data = load_tensorboard_scalar(
+        f"logs/dqn_tensorboard/DQN_Run_{best_runs['DQN']}_1",
+        "train/loss"
+    )
 
-    print("[SUCCESS] All 3 report plots generated from real training monitor logs!\n")
+    if loss_data is not None:
+        steps, loss = loss_data
+        loss = rolling_window_avg(loss, window=20)
+        ax.plot(
+            steps,
+            loss,
+            linewidth=2,
+            color="#1f77b4"
+        )
+        ax.set_title("DQN Objective Curve")
+        ax.set_xlabel("Training Step")
+        ax.set_ylabel("TD Loss")
+        ax.grid(True)
+    else:
+        ax.text(
+            0.5,
+            0.5,
+            "No DQN TensorBoard loss found",
+            ha="center",
+            transform=ax.transAxes
+        )
+    plt.tight_layout()
+    plot4_path = "assets/dqn_objective_curve.png"
+    plt.savefig(plot4_path, dpi=300)
+    plt.close()
+
+    print(f" Saved: {plot4_path}")
+    
+    #policy entropy
+    fig, ax = plt.subplots(figsize=(10, 6))
+    for algo, color in [
+        ("PPO", "#2ca02c"),
+        ("A2C", "#ff7f0e")
+    ]:
+        entropy_data = load_tensorboard_scalar(
+            f"logs/{algo.lower()}_tensorboard/{algo}_Run_{best_runs[algo]}_1",
+            "train/entropy_loss"
+        )
+        if entropy_data is not None:
+            steps, entropy = entropy_data
+            entropy = rolling_window_avg(entropy, window=20)
+            ax.plot(
+                steps,
+                entropy,
+                linewidth=2,
+                color=color,
+                label=algo
+            )
+
+    ax.set_title("Policy Entropy During Training")
+    ax.set_xlabel("Training Step")
+    ax.set_ylabel("Entropy Loss")
+    if ax.has_data():
+       ax.legend()
+    else:
+        ax.text(
+            0.5,
+            0.5,
+            "No policy entropy data found",
+            ha="center",
+            transform=ax.transAxes
+        )
+    ax.grid(True)
+    plt.tight_layout()
+    plot5_path = "assets/policy_entropy.png"
+    plt.savefig(plot5_path, dpi=300)
+    plt.close()
+    print(f" Saved: {plot5_path}")
+    
+    print("\n[SUCCESS] Generated all 5 report plots!\n")
+
+    return    
 
 
 if __name__ == "__main__":
