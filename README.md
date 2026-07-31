@@ -1,5 +1,7 @@
 # Fleet Driver Fatigue Monitoring — RL Summative
 
+**Video demo:** https://vimeo.com/1214704672?fl=ip&fe=ec
+
 A reinforcement learning system that simulates an in-cab driver fatigue monitor for
 a commercial fleet vehicle. The agent watches signs of drowsiness (eye closure, yawning,
 head pose, drive time) and decides when to intervene — from doing nothing, to a mild
@@ -119,7 +121,7 @@ project report (`report.pdf`).
 ## Report & Video
 
 - **Report:** `report.pdf`
-- **Video demo:** [link here]
+- **Video demo:** https://vimeo.com/1214704672?fl=ip&fe=ec
 
 ## Author
 
