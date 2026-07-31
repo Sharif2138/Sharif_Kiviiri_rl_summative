@@ -31,7 +31,7 @@ def run_simulation():
 
         step_count += 1
         total_reward += reward
-        time.sleep(0.1)
+        time.sleep(1.8)
 
         done = terminated or truncated
         print(
